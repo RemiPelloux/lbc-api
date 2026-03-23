@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-import asyncio
 from typing import Annotated, cast
 
 from fastapi import Depends, Request
 
-from app.sdk.client import Client
+from app.services.lbc_pool import LbcClientPool
 from app.services.sync_runtime import LbcRuntime
 
 
 def get_lbc_runtime(request: Request) -> LbcRuntime:
-    client = cast(Client, request.app.state.lbc_client)
-    lock = cast(asyncio.Lock, request.app.state.lbc_lock)
-    return LbcRuntime(client, lock)
+    pool = cast(LbcClientPool, request.app.state.lbc_pool)
+    return LbcRuntime(pool)
 
 
 LbcRuntimeDep = Annotated[LbcRuntime, Depends(get_lbc_runtime)]

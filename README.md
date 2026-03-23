@@ -12,7 +12,8 @@ REST API for Leboncoin classified search and listings. The **HTTP client lives i
 
 - **Single installable project** — one `pip install -e ".[dev]"`, no extra package path.
 - **Layers** — `app/api` (HTTP), `app/schemas` (DTOs), `app/services` (orchestration), `app/sdk` (low-level client), `app/core` (config + factory).
-- **Concurrency** — serialized calls on a shared session; batch helpers use `Client.fork()`.
+- **Concurrency** — pool of isolated `Client` sessions (`LBC_API_CLIENT_POOL_SIZE`, default 4); batch helpers still use `Client.fork()` inside the SDK.
+- **OpenAPI** — `/docs` (Swagger UI), `/redoc`, `/openapi.json`; JSON is serialized via FastAPI + Pydantic (native bytes path).
 
 ---
 
@@ -37,6 +38,8 @@ Environment (prefix `LBC_API_`):
 | `LBC_API_HOST` | Bind address (default `0.0.0.0`) |
 | `LBC_API_PORT` | Port (default `8000`) |
 | `LBC_API_PROXY_URL` | HTTP(S) proxy, e.g. `http://user:pass@host:3128` |
+| `LBC_API_CLIENT_POOL_SIZE` | Parallel upstream sessions (1–32, default `4`) |
+| `LBC_API_DOCS_CONTACT_URL` | Optional URL in OpenAPI “Contact” block |
 
 Run:
 
@@ -46,7 +49,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 lbc-api
 ```
 
-Docs: `http://localhost:8000/docs`
+Interactive docs: `http://localhost:8000/docs` · machine-readable schema: `http://localhost:8000/openapi.json`
 
 ---
 
@@ -60,6 +63,30 @@ Docs: `http://localhost:8000/docs`
 | GET | `/v1/ads/{ad_id}` | Single ad |
 | POST | `/v1/ads/batch` | Multiple ads (parallel, stable order) |
 | GET | `/v1/users/{user_id}` | User card |
+
+### Car filters (`POST /v1/search`)
+
+Use `vehicle_filters` for common voiture ranges (merged into the Leboncoin payload). `extra_filters` can add any other supported key and **overrides** the same key from `vehicle_filters`.
+
+Example:
+
+```json
+{
+  "text": "mazda mx5 nd",
+  "category": "VEHICULES_VOITURES",
+  "sort": "NEWEST",
+  "vehicle_filters": {
+    "registration_year": { "min": 2015, "max": 2022 },
+    "mileage_km": { "min": 0, "max": 120000 },
+    "horsepower": { "min": 130, "max": 200 },
+    "price_eur": { "min": 15000, "max": 35000 },
+    "fuels": ["diesel"],
+    "gearboxes": ["manuelle"]
+  }
+}
+```
+
+`fuels` / `gearboxes` values must match Leboncoin’s enum tokens (copy them from a refined search URL on the site if unsure).
 
 ---
 

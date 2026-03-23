@@ -8,12 +8,17 @@ from fastapi import HTTPException
 from app.api.errors import raise_lbc_as_http
 from app.schemas.requests import SearchByArgsBody
 from app.sdk.exceptions import LBCError
+from app.services.leboncoin.vehicle_filters import extra_from_vehicle_filters
 from app.services.sync_runtime import LbcRuntime
 
 T = TypeVar("T")
 
 
 def search_body_to_kwargs(body: SearchByArgsBody) -> dict[str, Any]:
+    merged_extra: dict[str, Any] = {
+        **extra_from_vehicle_filters(body.vehicle_filters),
+        **body.extra_filters,
+    }
     return {
         "text": body.text,
         "url": body.url,
@@ -27,7 +32,7 @@ def search_body_to_kwargs(body: SearchByArgsBody) -> dict[str, Any]:
         "owner_type": body.owner_type,
         "shippable": body.shippable,
         "locations": body.locations,
-        "extra_filters": body.extra_filters,
+        "extra_filters": merged_extra,
     }
 
 
