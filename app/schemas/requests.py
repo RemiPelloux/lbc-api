@@ -51,6 +51,35 @@ class VehicleFilters(BaseModel):
         default=None,
         description="Gearbox enum values (e.g. `manuelle`, `automatique`)",
     )
+    u_car_brands: list[str] | None = Field(
+        default=None,
+        description="Marque(s) → finder enum `u_car_brand` (tokens du site / URL)",
+    )
+    u_car_models: list[str] | None = Field(
+        default=None,
+        description="Modèle(s) → `u_car_model`",
+    )
+    doors: IntRange | None = Field(default=None, description="Nombre de portes → `doors`")
+    vehicle_seats: IntRange | None = Field(
+        default=None,
+        description="Places → `vehicle_seats`",
+    )
+    vehicle_types: list[str] | None = Field(
+        default=None,
+        description="Type de carrosserie → `vehicle_type` (ex. berline, citadine — ids site)",
+    )
+    first_owner: list[str] | None = Field(
+        default=None,
+        description="Première main → `first_owner` (ex. `1` / `0` selon tokens)",
+    )
+    critair: list[str] | None = Field(
+        default=None,
+        description="Vignette Crit'Air → `critair`",
+    )
+    vehicule_colors: list[str] | None = Field(
+        default=None,
+        description="Couleur → `vehicule_color`",
+    )
 
 
 class CityLocation(BaseModel):

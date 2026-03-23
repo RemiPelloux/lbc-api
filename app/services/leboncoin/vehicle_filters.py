@@ -40,4 +40,23 @@ def extra_from_vehicle_filters(filters: VehicleFilters | None) -> dict[str, Any]
     if filters.gearboxes:
         extra["gearbox"] = list(filters.gearboxes)
 
+    if filters.u_car_brands:
+        extra["u_car_brand"] = list(filters.u_car_brands)
+    if filters.u_car_models:
+        extra["u_car_model"] = list(filters.u_car_models)
+    if filters.doors is not None:
+        d = filters.doors
+        extra["doors"] = [d.min, d.max]
+    if filters.vehicle_seats is not None:
+        s = filters.vehicle_seats
+        extra["vehicle_seats"] = [s.min, s.max]
+    if filters.vehicle_types:
+        extra["vehicle_type"] = list(filters.vehicle_types)
+    if filters.first_owner:
+        extra["first_owner"] = list(filters.first_owner)
+    if filters.critair:
+        extra["critair"] = list(filters.critair)
+    if filters.vehicule_colors:
+        extra["vehicule_color"] = list(filters.vehicule_colors)
+
     return extra

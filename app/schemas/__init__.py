@@ -1,3 +1,9 @@
+from app.schemas.domain_search import (
+    RealEstateFilters,
+    SearchCarsBody,
+    SearchDomainBase,
+    SearchRealEstateBody,
+)
 from app.schemas.requests import (
     BatchAdsBody,
     CityLocation,
@@ -13,8 +19,12 @@ __all__ = [
     "BatchAdsBody",
     "CityLocation",
     "IntRange",
+    "RealEstateFilters",
     "SearchByArgsBody",
+    "SearchCarsBody",
+    "SearchDomainBase",
     "SearchMeta",
+    "SearchRealEstateBody",
     "SearchResponse",
     "SearchWithUsersBody",
     "UserOut",

@@ -14,6 +14,14 @@ def test_extra_from_vehicle_filters_maps_ranges_and_enums() -> None:
         price_eur=IntRange(min=10_000, max=35_000),
         fuels=["diesel"],
         gearboxes=["manuelle"],
+        u_car_brands=["renault"],
+        u_car_models=["clio"],
+        doors=IntRange(min=5, max=5),
+        vehicle_seats=IntRange(min=5, max=5),
+        vehicle_types=["citadine"],
+        first_owner=["1"],
+        critair=["1"],
+        vehicule_colors=["bleu"],
     )
     extra = extra_from_vehicle_filters(vf)
     assert extra["regdate"] == [2015, 2020]
@@ -22,6 +30,14 @@ def test_extra_from_vehicle_filters_maps_ranges_and_enums() -> None:
     assert extra["price"] == [10_000, 35_000]
     assert extra["fuel"] == ["diesel"]
     assert extra["gearbox"] == ["manuelle"]
+    assert extra["u_car_brand"] == ["renault"]
+    assert extra["u_car_model"] == ["clio"]
+    assert extra["doors"] == [5, 5]
+    assert extra["vehicle_seats"] == [5, 5]
+    assert extra["vehicle_type"] == ["citadine"]
+    assert extra["first_owner"] == ["1"]
+    assert extra["critair"] == ["1"]
+    assert extra["vehicule_color"] == ["bleu"]
 
 
 def test_int_range_rejects_inverted_bounds() -> None:

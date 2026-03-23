@@ -30,6 +30,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
         "name": "Users",
         "description": "Public user-card data for a seller id.",
     },
+    {
+        "name": "Schemas",
+        "description": (
+            "JSON Schema documents for domain search bodies (cars, immobilier), "
+            "including every filter field and embedded examples."
+        ),
+    },
 ]
 
 

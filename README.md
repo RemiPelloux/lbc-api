@@ -58,13 +58,17 @@ Interactive docs: `http://localhost:8000/docs` · machine-readable schema: `http
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/health` | Liveness |
-| POST | `/v1/search` | Search |
+| POST | `/v1/search` | Search (any category) |
+| POST | `/v1/search/cars` | Search véhicules (default `VEHICULES_VOITURES`, `vehicle_filters` étendu) |
+| POST | `/v1/search/real-estate` | Search immobilier (default ventes, `real_estate_filters`) |
 | POST | `/v1/search/with-users` | Search + seller prefetch |
+| GET | `/v1/schemas/search-cars` | JSON Schema du corps `POST /v1/search/cars` (`$defs` + exemples) |
+| GET | `/v1/schemas/search-real-estate` | JSON Schema du corps `POST /v1/search/real-estate` |
 | GET | `/v1/ads/{ad_id}` | Single ad |
 | POST | `/v1/ads/batch` | Multiple ads (parallel, stable order) |
 | GET | `/v1/users/{user_id}` | User card |
 
-### Car filters (`POST /v1/search`)
+### Car filters (`POST /v1/search` or `POST /v1/search/cars`)
 
 Use `vehicle_filters` for common voiture ranges (merged into the Leboncoin payload). `extra_filters` can add any other supported key and **overrides** the same key from `vehicle_filters`.
 
@@ -87,6 +91,12 @@ Example:
 ```
 
 `fuels` / `gearboxes` values must match Leboncoin’s enum tokens (copy them from a refined search URL on the site if unsure).
+
+Optional extras on `vehicle_filters`: `u_car_brands` / `u_car_models` (finder `u_car_brand`, `u_car_model`), `doors`, `vehicle_seats`, `vehicle_types`, `first_owner`, `critair`, `vehicule_colors`. See **`GET /v1/schemas/search-cars`** for the full JSON Schema and examples.
+
+### Real estate filters (`POST /v1/search/real-estate`)
+
+Use `real_estate_filters` for surface (`square_m2` → `square`), pièces (`rooms`), prix / loyer / charges, DPE (`energy_rates`, `ges_ratings`), type de bien (`real_estate_types` → `real_estate_type`), équipements (`specificities`, `elevator`, `furnished`), etc. `extra_filters` overrides the same finder key. Full field list and examples: **`GET /v1/schemas/search-real-estate`**.
 
 ---
 

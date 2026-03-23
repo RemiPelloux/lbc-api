@@ -232,7 +232,7 @@ def build_search_payload_with_args(
 
     if kwargs:
         for key, value in kwargs.items():
-            if not isinstance(value, (list, tuple)):
+            if not isinstance(value, list | tuple):
                 raise InvalidValue(f"The value of '{key}' must be a list or a tuple.")
             # Range
             if all(isinstance(x, int) for x in value):

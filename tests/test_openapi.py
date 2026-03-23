@@ -20,7 +20,7 @@ def test_openapi_json_ok(api_client: TestClient) -> None:
     data = response.json()
     assert data["openapi"].startswith("3.")
     assert data["info"]["title"] == "LBC API"
-    assert data["info"]["version"] == "0.4.0"
+    assert data["info"]["version"] == "0.5.0"
     assert "MIT" in (data["info"].get("license") or {}).get("name", "")
 
 
@@ -34,6 +34,10 @@ def test_openapi_paths_and_methods(api_client: TestClient) -> None:
     assert "/v1/ads/{ad_id}" in paths
     assert "/v1/ads/batch" in paths
     assert "/v1/users/{user_id}" in paths
+    assert "/v1/search/cars" in paths
+    assert "/v1/search/real-estate" in paths
+    assert "/v1/schemas/search-cars" in paths
+    assert "/v1/schemas/search-real-estate" in paths
 
 
 def test_openapi_tags_match_config(api_client: TestClient) -> None:
@@ -62,3 +66,29 @@ def test_redoc_served(api_client: TestClient) -> None:
     response = api_client.get("/redoc")
     assert response.status_code == 200
     assert "redoc" in response.text.lower()
+
+
+def test_schema_search_cars_json_includes_vehicle_filters(api_client: TestClient) -> None:
+    response = api_client.get("/v1/schemas/search-cars")
+    assert response.status_code == 200
+    schema = response.json()
+    assert schema.get("title") == "SearchCarsBody"
+    defs = schema.get("$defs", {})
+    assert "VehicleFilters" in defs
+    props = defs["VehicleFilters"].get("properties", {})
+    assert "u_car_brands" in props
+    assert "critair" in props
+
+
+def test_schema_search_real_estate_json_includes_real_estate_filters(
+    api_client: TestClient,
+) -> None:
+    response = api_client.get("/v1/schemas/search-real-estate")
+    assert response.status_code == 200
+    schema = response.json()
+    assert schema.get("title") == "SearchRealEstateBody"
+    defs = schema.get("$defs", {})
+    assert "RealEstateFilters" in defs
+    ref_props = defs["RealEstateFilters"].get("properties", {})
+    assert "real_estate_types" in ref_props
+    assert "energy_rates" in ref_props
