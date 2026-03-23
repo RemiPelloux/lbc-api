@@ -1,0 +1,8 @@
+Third-party code (MIT)
+
+The directory `app/sdk/` includes an HTTP client derived from prior MIT-licensed
+work. Original implementation: Copyright (c) Etienne HODE and contributors,
+under the MIT License (same terms as the root `LICENSE`).
+
+All other files in this repository: Copyright (c) Remi Pelloux, MIT License
+(`LICENSE`).
