@@ -5,6 +5,13 @@ from curl_cffi import BrowserTypeLiteral, requests
 
 from ..model import Proxy
 
+_DEFAULT_IMPERSONATE: tuple[BrowserTypeLiteral, ...] = (
+    "safari",
+    "safari_ios",
+    "chrome_android",
+    "firefox",
+)
+
 
 class SessionMixin:
     def __init__(
@@ -12,13 +19,20 @@ class SessionMixin:
         proxy: Proxy | None = None,
         impersonate: BrowserTypeLiteral = None,
         request_verify: bool = True,
+        *,
+        fork_parent_session: requests.Session | None = None,
         **kwargs,
     ):
-        self.session = self._init_session(
-            proxy=proxy, impersonate=impersonate, request_verify=request_verify
-        )
         self._proxy = proxy
         self._impersonate = impersonate
+        if fork_parent_session is not None:
+            self.session = self._fork_session_from_parent(
+                fork_parent_session, request_verify=request_verify
+            )
+        else:
+            self.session = self._init_session(
+                proxy=proxy, impersonate=impersonate, request_verify=request_verify
+            )
         super().__init__(**kwargs)
 
     def _generate_user_agent(self) -> str:
@@ -125,11 +139,10 @@ class SessionMixin:
             requests.Session: A configured session instance ready to send requests.
         """
         if impersonate == None:  # Pick a random browser client
-            impersonate: BrowserTypeLiteral = random.choice(
-                ["safari", "safari_ios", "chrome_android", "firefox"]
-            )
+            impersonate = random.choice(_DEFAULT_IMPERSONATE)
 
         session = requests.Session(impersonate=impersonate)
+        session._lbc_impersonate = impersonate  # type: ignore[attr-defined]
 
         session.headers.update(
             {
@@ -143,6 +156,35 @@ class SessionMixin:
             session.proxies = {"http": proxy.url, "https": proxy.url}
 
         session.get("https://www.leboncoin.fr/", verify=request_verify)  # Init cookies
+        return session
+
+    def _fork_session_from_parent(
+        self,
+        parent: requests.Session,
+        *,
+        request_verify: bool,
+    ) -> requests.Session:
+        """
+        Clone TLS profile, headers, and cookies from ``parent`` without a second homepage GET.
+
+        Parallel ``fork()`` workers used to each warm up ``www.leboncoin.fr`` (N+1 requests
+        for N workers); reusing the parent's session material keeps traffic proportional to
+        actual API calls.
+        """
+        impersonate: BrowserTypeLiteral = getattr(
+            parent, "_lbc_impersonate", None
+        ) or random.choice(_DEFAULT_IMPERSONATE)
+        session = requests.Session(impersonate=impersonate)
+        session._lbc_impersonate = impersonate  # type: ignore[attr-defined]
+        session.headers.clear()
+        session.headers.update(parent.headers)
+        session.cookies.clear()
+        session.cookies.update(parent.cookies)
+        proxy = self._proxy
+        if proxy:
+            session.proxies = {"http": proxy.url, "https": proxy.url}
+        else:
+            session.proxies = {}
         return session
 
     @property

@@ -2,17 +2,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
-class UserOut(BaseModel):
+class ApiModel(BaseModel):
+    """Output DTOs: skip re-validation on ``model_validate`` for faster serialization paths."""
+
+    model_config = ConfigDict(revalidate_instances="never")
+
+
+class UserOut(ApiModel):
     id: str
     name: str
     account_type: str
     location: str | None = None
 
 
-class AdLocationOut(BaseModel):
+class AdLocationOut(ApiModel):
     country_id: str | None = None
     region_id: str | None = None
     region_name: str | None = None
@@ -28,8 +34,8 @@ class AdLocationOut(BaseModel):
     is_shape: bool | None = None
 
 
-class AdAttributeOut(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class AdAttributeOut(ApiModel):
+    model_config = ConfigDict(extra="allow", revalidate_instances="never")
 
     key: str | None = None
     key_label: str | None = None
@@ -41,7 +47,7 @@ class AdAttributeOut(BaseModel):
     generic: bool | None = None
 
 
-class AdMediaOut(BaseModel):
+class AdMediaOut(ApiModel):
     """Every image URL tier from Leboncoin, plus a single deduped list."""
 
     urls_thumb: list[str] = Field(default_factory=list)
@@ -60,8 +66,8 @@ class AdMediaOut(BaseModel):
     )
 
 
-class AdOut(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class AdOut(ApiModel):
+    model_config = ConfigDict(extra="allow", revalidate_instances="never")
 
     id: int | None
     subject: str
@@ -78,8 +84,7 @@ class AdOut(BaseModel):
     ad_type: str | None = None
     #: Full listing text from upstream ``body`` (Leboncoin description)
     body: str
-    #: Same string as ``body`` (ergonomic alias for “description”)
-    description: str
+
     first_publication_date: str | None = None
     expiration_date: str | None = None
     index_date: str | None = None
@@ -92,12 +97,17 @@ class AdOut(BaseModel):
     owner_user_id: str | None = None
     user: UserOut | None = None
 
+    @computed_field
+    def description(self) -> str:
+        """Alias of ``body`` (no duplicate storage)."""
+        return self.body
 
-class SearchMeta(BaseModel):
+
+class SearchMeta(ApiModel):
     total: int | None
     max_pages: int | None
 
 
-class SearchResponse(BaseModel):
+class SearchResponse(ApiModel):
     meta: SearchMeta
     ads: list[AdOut]

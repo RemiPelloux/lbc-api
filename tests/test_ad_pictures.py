@@ -71,6 +71,8 @@ def test_map_ad_to_response_includes_images_and_media() -> None:
     out = map_ad_to_response(ad, include_user=False)
     assert out.body == "Description"
     assert out.description == out.body
+    dumped = out.model_dump()
+    assert dumped["description"] == dumped["body"]
     assert out.images == ["https://img.example/large.jpg"]
     assert out.media.urls_large == ["https://img.example/large.jpg"]
     assert out.media.urls_thumb == ["https://img.example/thumb.jpg"]
@@ -83,6 +85,44 @@ def test_map_ad_to_response_includes_images_and_media() -> None:
         "https://img.example/main_small.jpg",
     ]
     assert out.media.nb_images == 2
+
+
+def test_brand_fallback_when_root_is_leboncoin() -> None:
+    raw = {
+        "list_id": 1,
+        "first_publication_date": "",
+        "expiration_date": "",
+        "index_date": "",
+        "status": "active",
+        "category_id": "2",
+        "category_name": "Voitures",
+        "subject": "MX-5",
+        "body": "x",
+        "brand": "leboncoin",
+        "ad_type": "offer",
+        "url": "https://www.leboncoin.fr/ad/1",
+        "price_cents": 100,
+        "has_phone": False,
+        "owner": {"user_id": "u"},
+        "location": {},
+        "attributes": [
+            {
+                "key": "brand",
+                "key_label": "Marque",
+                "value": "Mazda",
+                "value_label": "Mazda",
+                "values": ["Mazda"],
+                "values_label": None,
+                "value_label_reader": None,
+                "generic": True,
+            }
+        ],
+        "images": {},
+    }
+    ad = Ad._build(raw=raw, client=MagicMock())
+    assert ad.brand == "Mazda"
+    out = map_ad_to_response(ad, include_user=False)
+    assert out.brand == "Mazda"
 
 
 def test_ad_picture_set_distinct_urls_preserve_order_dedupe() -> None:

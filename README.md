@@ -90,7 +90,7 @@ All search endpoints return the same **`SearchResponse`** envelope. **`GET /v1/a
 | `price_calendar` | any \| null | Upstream pricing calendar when present |
 | `category_id` | string \| null | Category id |
 | `category_name` | string \| null | Category label |
-| `brand` | string \| null | Brand when applicable |
+| `brand` | string \| null | Vehicle/product brand; if upstream sends a placeholder (e.g. `leboncoin`), we substitute the `brand` / `u_car_brand` attribute when available |
 | `ad_type` | string \| null | e.g. offer / demand |
 | `body` | string | Full description text (upstream `body`) |
 | `description` | string | Same as `body` |
@@ -141,7 +141,9 @@ Extra keys may appear on an attribute object if Leboncoin adds fields (`AdAttrib
 
 Returns a **`User`** object with the same fields as `user` above (top-level JSON, not wrapped).
 
-### Example: `SearchResponse` (illustrative)
+### Example: `SearchResponse` (shape only — **not** real data)
+
+The JSON below shows **field names and nesting** only. **URLs and ids are invented** and will **not** load in a browser. For **real** listings and **real** `img.leboncoin.fr` links, run `pytest tests/test_real_leboncoin_optional.py -v` (see **Quality**).
 
 ```json
 {
@@ -153,17 +155,17 @@ Returns a **`User`** object with the same fields as `user` above (top-level JSON
     {
       "id": 2179560719,
       "subject": "Example listing title",
-      "url": "https://www.leboncoin.fr/ventes_immobilieres/2179560719.htm",
-      "images": ["https://img.leboncoin.fr/.../image.jpg?rule=ad-large"],
+      "url": "https://www.example.invalid/classified/0000000000.htm",
+      "images": ["https://example.invalid/illustration-large.jpg"],
       "media": {
-        "urls_thumb": ["https://img.leboncoin.fr/...?rule=ad-thumb"],
-        "urls_small": ["https://img.leboncoin.fr/...?rule=ad-small"],
-        "urls_large": ["https://img.leboncoin.fr/...?rule=ad-large"],
-        "urls": ["https://img.leboncoin.fr/...?rule=ad-image"],
+        "urls_thumb": ["https://example.invalid/illustration-thumb.jpg"],
+        "urls_small": ["https://example.invalid/illustration-small.jpg"],
+        "urls_large": ["https://example.invalid/illustration-large.jpg"],
+        "urls": ["https://example.invalid/illustration.jpg"],
         "nb_images": 3,
         "thumb_url": null,
         "small_url": null,
-        "all_urls": ["https://img.leboncoin.fr/..."]
+        "all_urls": ["https://example.invalid/illustration.jpg"]
       },
       "price": 30500.0,
       "price_cents": 3050000,
@@ -295,6 +297,29 @@ ruff check app tests && ruff format app tests
 mypy app
 pytest
 ```
+
+Default `pytest` does **not** collect `tests/test_real_leboncoin_optional.py` (see `addopts` in `pyproject.toml`), so the offline suite stays fast—**no skipped row** for a test you never meant to run.
+
+### Live Leboncoin HTTP (no fake URLs)
+
+Run that file **explicitly**. It performs **four** real finder searches and asserts **real** `leboncoin.fr` / `img.leboncoin.fr` URLs:
+
+1. **PS5** (cat. consoles)  
+2. **iPhone** (cat. téléphones)  
+3. **Mazda MX-5** (cat. voitures)  
+4. **Maison ~60 m²** (ventes immo), **5 km** autour de **Saint-Laurent-du-Var** (surface 55–65 m², type maison)
+
+```bash
+# If you get HTTP 403 / Datadome, try a French residential IP or:
+# export LBC_API_PROXY_URL=http://user:pass@host:port
+pytest tests/test_real_leboncoin_optional.py -v
+```
+
+To print **one real listing per scenario** as JSON (same searches as the test)::
+
+    python3 scripts/print_live_search_examples.py
+
+If the run fails, the message explains anti-bot / proxy; the suite does not invent listing or image URLs.
 
 ---
 

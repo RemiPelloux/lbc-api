@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lbc-api"
-version = "0.6.0"
+version = "0.6.1"
 description = "Production-oriented REST API for Leboncoin classifieds (single-package app with embedded HTTP client SDK)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -81,3 +81,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = ["--ignore=tests/test_real_leboncoin_optional.py"]
+markers = [
+  "real_lbc: live HTTP to Leboncoin (run: pytest tests/test_real_leboncoin_optional.py -v)",
+]

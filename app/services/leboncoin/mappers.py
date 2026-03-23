@@ -44,8 +44,8 @@ def _map_location(loc: Location) -> AdLocationOut:
 
 
 def _map_attribute(attr: Attribute) -> AdAttributeOut:
-    vals = attr.values if isinstance(attr.values, list) else []
-    str_vals = [v for v in vals if isinstance(v, str)]
+    vals = attr.values
+    str_vals = [v for v in vals if isinstance(v, str)] if isinstance(vals, list) else []
     return AdAttributeOut(
         key=attr.key,
         key_label=attr.key_label,
@@ -74,9 +74,7 @@ def _map_media(ad: Ad) -> AdMediaOut:
 
 
 def _coerce_options(raw: dict[str, Any] | None) -> dict[str, Any] | None:
-    if raw is None:
-        return None
-    if not isinstance(raw, dict):
+    if raw is None or not isinstance(raw, dict):
         return None
     return dict(raw)
 
@@ -86,11 +84,8 @@ def map_ad_to_response(ad: Ad, *, include_user: bool) -> AdOut:
     if include_user and ad._user is not None:
         user_out = map_user_to_response(ad._user)
 
-    raw_images = ad.images or []
-    imgs = raw_images if isinstance(raw_images, list) else []
-    images_large = [u for u in imgs if isinstance(u, str)]
+    images_large = [u for u in ad.images if isinstance(u, str)]
 
-    text_body = ad.body or ""
     return AdOut(
         id=ad.id,
         subject=ad.subject or "",
@@ -102,10 +97,9 @@ def map_ad_to_response(ad: Ad, *, include_user: bool) -> AdOut:
         price_calendar=ad.price_calendar,
         category_id=ad.category_id,
         category_name=ad.category_name,
-        brand=ad.brand,
+        brand=ad.brand or None,
         ad_type=ad.ad_type,
-        body=text_body,
-        description=text_body,
+        body=ad.body or "",
         first_publication_date=ad.first_publication_date,
         expiration_date=ad.expiration_date,
         index_date=ad.index_date,

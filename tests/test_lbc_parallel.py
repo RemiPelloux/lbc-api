@@ -110,3 +110,22 @@ def test_client_fork_returns_independent_instance() -> None:
     child = parent.fork()
     assert child is not parent
     assert child.session is not parent.session
+
+
+def test_fork_skips_second_homepage_warmup(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.sdk.mixin.session import SessionMixin
+
+    calls: list[str] = []
+
+    real_init = SessionMixin._init_session
+
+    def _track_init(self: SessionMixin, *a: object, **k: object) -> object:
+        calls.append("init_session")
+        return real_init(self, *a, **k)
+
+    monkeypatch.setattr(SessionMixin, "_init_session", _track_init)
+    parent = Client()
+    assert calls == ["init_session"]
+    child = parent.fork()
+    assert calls == ["init_session"]
+    assert child.session is not parent.session

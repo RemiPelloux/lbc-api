@@ -1,4 +1,4 @@
-from curl_cffi import BrowserTypeLiteral
+from curl_cffi import BrowserTypeLiteral, requests
 
 from .exceptions import DatadomeError, NotFoundError, RequestError
 from .mixin import AdMixin, SearchMixin, SessionMixin, UserMixin
@@ -13,6 +13,8 @@ class Client(SessionMixin, SearchMixin, UserMixin, AdMixin):
         request_verify: bool = True,
         timeout: float = 30.0,
         max_retries: int = 5,
+        *,
+        fork_parent_session: requests.Session | None = None,
     ):
         """
         Initializes a Leboncoin Client instance with optional proxy, browser impersonation, and SSL verification settings.
@@ -26,7 +28,12 @@ class Client(SessionMixin, SearchMixin, UserMixin, AdMixin):
             timeout (int, optional): Maximum time in seconds to wait for a request before timing out. Defaults to 30.
             max_retries (int, optional): Maximum number of times to retry a request in case of failure (403 error). Defaults to 5.
         """
-        super().__init__(proxy=proxy, impersonate=impersonate, request_verify=request_verify)
+        super().__init__(
+            proxy=proxy,
+            impersonate=impersonate,
+            request_verify=request_verify,
+            fork_parent_session=fork_parent_session,
+        )
 
         self.request_verify = request_verify
         self.timeout = timeout
@@ -37,7 +44,8 @@ class Client(SessionMixin, SearchMixin, UserMixin, AdMixin):
         Create a new client with the same configuration and a fresh HTTP session.
 
         Use this for concurrent requests: the underlying session is not thread-safe, so each
-        worker should use its own client instance.
+        worker should use its own client instance. The new session reuses cookies and headers
+        from this client so parallel workers do not each repeat the homepage warmup GET.
         """
         return Client(
             proxy=self._proxy,
@@ -45,6 +53,7 @@ class Client(SessionMixin, SearchMixin, UserMixin, AdMixin):
             request_verify=self.request_verify,
             timeout=self.timeout,
             max_retries=self.max_retries,
+            fork_parent_session=self.session,
         )
 
     def _fetch(

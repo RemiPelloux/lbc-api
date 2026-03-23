@@ -41,6 +41,27 @@ def _str_list(v: Any) -> list[str]:
     return [str(v)]
 
 
+_GARBAGE_ROOT_BRANDS = frozenset({"", "leboncoin"})
+
+
+def _normalize_brand(raw_brand: Any, attributes: list[Attribute]) -> str:
+    """Finder sometimes puts ``leboncoin`` at root; prefer human ``brand`` / ``u_car_brand`` attrs."""
+    b = raw_brand.strip() if isinstance(raw_brand, str) else ""
+    if b and b.lower() not in _GARBAGE_ROOT_BRANDS:
+        return b
+    for attr in attributes:
+        if attr.key == "brand" and attr.value_label:
+            label = str(attr.value_label).strip()
+            if label:
+                return label
+    for attr in attributes:
+        if attr.key == "u_car_brand" and attr.value_label:
+            label = str(attr.value_label).strip()
+            if label:
+                return label
+    return b
+
+
 @dataclass
 class AdPictureSet:
     """All image URL collections returned by finder / classified APIs."""
@@ -60,13 +81,7 @@ class AdPictureSet:
         for single in (self.thumb_url, self.small_url):
             if single:
                 chunks.append(single)
-        seen: set[str] = set()
-        out: list[str] = []
-        for u in chunks:
-            if u not in seen:
-                seen.add(u)
-                out.append(u)
-        return out
+        return list(dict.fromkeys(chunks))
 
 
 @dataclass
@@ -148,6 +163,7 @@ class Ad:
         large_only = pictures.urls_large
 
         raw_owner: dict = raw.get("owner", {})
+        brand = _normalize_brand(raw.get("brand"), attributes)
         return Ad(
             id=raw.get("list_id"),
             first_publication_date=raw.get("first_publication_date"),
@@ -158,7 +174,7 @@ class Ad:
             category_name=raw.get("category_name"),
             subject=raw.get("subject"),
             body=raw.get("body"),
-            brand=raw.get("brand"),
+            brand=brand,
             ad_type=raw.get("ad_type"),
             url=raw.get("url"),
             price=raw.get("price_cents") / 100 if raw.get("price_cents") else None,

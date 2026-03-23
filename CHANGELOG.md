@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-03-23
+
+### Changed
+
+- **`Client.fork()`**: new sessions clone the parent’s headers, cookies, and TLS impersonation profile instead of performing another `www.leboncoin.fr` warmup GET—removes N+1 homepage requests when prefetching users or batch-fetching ads in parallel.
+- **Performance / DTOs**: response models use `revalidate_instances="never"`; `description` is a `@computed_field` alias of `body` (no duplicate string field).
+- **`AdPictureSet.all_distinct_urls`**: ordered dedupe via `dict.fromkeys` (single pass).
+- **Brand**: root `brand` values like `leboncoin` are replaced by the `brand` / `u_car_brand` attribute when present.
+- **Mapper**: leaner image list handling; `_coerce_options` branch folded.
+
+### Added
+
+- Test `test_brand_fallback_when_root_is_leboncoin`.
+- Test `test_fork_skips_second_homepage_warmup`.
+- Live integration test (PS5, iPhone, Mazda MX-5, maison ~60 m² near Saint-Laurent-du-Var) lives in `tests/test_real_leboncoin_optional.py`; default `pytest` ignores that file via `addopts` (run it explicitly for real HTTP).
+- `app/services/leboncoin/live_search_scenarios.py` + `scripts/print_live_search_examples.py` share the same four live queries and print one real listing per scenario as JSON.
+
 ## [0.6.0] - 2026-03-23
 
 ### Added
