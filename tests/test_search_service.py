@@ -3,6 +3,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from app.sdk.model.ad import AdPictureSet, Location
 from app.sdk.model.enums import Sort
 from app.sdk.model.search import Search
 from app.services.leboncoin.enum_resolution import parse_enum_member
@@ -60,6 +61,43 @@ def test_run_search_with_users_calls_prefetch(monkeypatch: pytest.MonkeyPatch) -
     ad.category_name = "cat"
     ad.body = ""
     ad.first_publication_date = None
+    ad.images = []
+    ad.pictures = AdPictureSet(
+        urls_thumb=[],
+        urls_small=[],
+        urls_large=[],
+        urls=[],
+        nb_images=None,
+        thumb_url=None,
+        small_url=None,
+    )
+    ad.location = Location(
+        country_id="FR",
+        region_id="",
+        region_name="",
+        department_id="",
+        department_name="",
+        city_label="",
+        city="",
+        zipcode="",
+        lat=0.0,
+        lng=0.0,
+        source="",
+        provider="",
+        is_shape=False,
+    )
+    ad.attributes = []
+    ad.options = None
+    ad.price_cents = None
+    ad.price_calendar = None
+    ad.expiration_date = ""
+    ad.index_date = ""
+    ad.status = ""
+    ad.category_id = ""
+    ad.brand = ""
+    ad.ad_type = ""
+    ad.has_phone = False
+    ad.favorites = None
     search = MagicMock(spec=Search)
     search.ads = [ad]
     search.total = 1

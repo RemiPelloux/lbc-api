@@ -33,6 +33,42 @@ class Attribute:
     generic: bool
 
 
+def _str_list(v: Any) -> list[str]:
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return [str(x) for x in v if x is not None and str(x) != ""]
+    return [str(v)]
+
+
+@dataclass
+class AdPictureSet:
+    """All image URL collections returned by finder / classified APIs."""
+
+    urls_thumb: list[str]
+    urls_small: list[str]
+    urls_large: list[str]
+    urls: list[str]
+    nb_images: int | None
+    thumb_url: str | None
+    small_url: str | None
+
+    def all_distinct_urls(self) -> list[str]:
+        chunks: list[str] = []
+        for seq in (self.urls_thumb, self.urls_small, self.urls_large, self.urls):
+            chunks.extend(seq)
+        for single in (self.thumb_url, self.small_url):
+            if single:
+                chunks.append(single)
+        seen: set[str] = set()
+        out: list[str] = []
+        for u in chunks:
+            if u not in seen:
+                seen.add(u)
+                out.append(u)
+        return out
+
+
 @dataclass
 class Ad:
     id: int
@@ -48,11 +84,16 @@ class Ad:
     ad_type: str
     url: str
     price: float
+    #: Large gallery URLs (same as ``pictures.urls_large``)
     images: list[str]
+    pictures: AdPictureSet
     attributes: list[Attribute]
     location: Location
     has_phone: bool
     favorites: int  # Unvailaible on Ad from Search
+    options: dict[str, Any] | None
+    price_cents: int | None
+    price_calendar: Any
 
     _client: Any
     _user_id: str
@@ -68,7 +109,7 @@ class Ad:
                     key_label=raw_attribute.get("key_label"),
                     value=raw_attribute.get("value"),
                     value_label=raw_attribute.get("value_label"),
-                    values=raw_attribute.get("values"),
+                    values=raw_attribute.get("values") or [],
                     values_label=raw_attribute.get("values_label"),
                     value_label_reader=raw_attribute.get("value_label_reader"),
                     generic=raw_attribute.get("generic"),
@@ -92,6 +133,20 @@ class Ad:
             is_shape=raw_location.get("is_shape"),
         )
 
+        raw_img = raw.get("images") or {}
+        tu = raw_img.get("thumb_url")
+        su = raw_img.get("small_url")
+        pictures = AdPictureSet(
+            urls_thumb=_str_list(raw_img.get("urls_thumb")),
+            urls_small=_str_list(raw_img.get("urls_small")),
+            urls_large=_str_list(raw_img.get("urls_large")),
+            urls=_str_list(raw_img.get("urls")),
+            nb_images=raw_img.get("nb_images"),
+            thumb_url=tu if isinstance(tu, str) else None,
+            small_url=su if isinstance(su, str) else None,
+        )
+        large_only = pictures.urls_large
+
         raw_owner: dict = raw.get("owner", {})
         return Ad(
             id=raw.get("list_id"),
@@ -107,11 +162,15 @@ class Ad:
             ad_type=raw.get("ad_type"),
             url=raw.get("url"),
             price=raw.get("price_cents") / 100 if raw.get("price_cents") else None,
-            images=raw.get("images", {}).get("urls_large"),
+            images=large_only,
+            pictures=pictures,
             attributes=attributes,
             location=location,
             has_phone=raw.get("has_phone"),
             favorites=raw.get("counters", {}).get("favorites"),
+            options=raw.get("options"),
+            price_cents=raw.get("price_cents"),
+            price_calendar=raw.get("price_calendar"),
             _client=client,
             _user_id=raw_owner.get("user_id"),
             _user=None,

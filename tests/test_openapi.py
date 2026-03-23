@@ -20,7 +20,7 @@ def test_openapi_json_ok(api_client: TestClient) -> None:
     data = response.json()
     assert data["openapi"].startswith("3.")
     assert data["info"]["title"] == "LBC API"
-    assert data["info"]["version"] == "0.5.0"
+    assert data["info"]["version"] == "0.6.0"
     assert "MIT" in (data["info"].get("license") or {}).get("name", "")
 
 

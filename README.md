@@ -49,7 +49,180 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 lbc-api
 ```
 
-Interactive docs: `http://localhost:8000/docs` · machine-readable schema: `http://localhost:8000/openapi.json`
+Interactive docs: `http://localhost:8000/docs` · machine-readable **request/response** schemas: `http://localhost:8000/openapi.json`
+
+Response JSON shapes are documented below; OpenAPI remains the source of truth for exact types and nullability.
+
+---
+
+## JSON output schemas
+
+All search endpoints return the same **`SearchResponse`** envelope. **`GET /v1/ads/{ad_id}`** returns one **`Ad`** object. **`POST /v1/ads/batch`** returns a **JSON array** of **`Ad`** objects (same shape as one element of `ads`, no `meta` wrapper).
+
+### `SearchResponse` (search endpoints)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `meta` | object | Result metadata |
+| `meta.total` | int \| null | Total hits (when provided by upstream) |
+| `meta.max_pages` | int \| null | Max paginated pages |
+| `ads` | array | List of ads |
+
+### `Ad` (each element of `ads`, or single-ad routes)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | int \| null | Listing id (`list_id`) |
+| `subject` | string | Title |
+| `url` | string | Leboncoin listing page URL |
+| `images` | string[] | Large image URLs (same as `media.urls_large`) |
+| `media` | object | All image tiers from upstream |
+| `media.urls_thumb` | string[] | Thumbnail URLs |
+| `media.urls_small` | string[] | Small URLs |
+| `media.urls_large` | string[] | Large URLs |
+| `media.urls` | string[] | Generic gallery URLs when present |
+| `media.nb_images` | int \| null | Count when provided |
+| `media.thumb_url` | string \| null | Single main thumb |
+| `media.small_url` | string \| null | Single main small |
+| `media.all_urls` | string[] | All distinct photo URLs (merged, deduped) |
+| `price` | number \| null | Price in major units (from `price_cents` / 100) |
+| `price_cents` | int \| null | Raw cents when present |
+| `price_calendar` | any \| null | Upstream pricing calendar when present |
+| `category_id` | string \| null | Category id |
+| `category_name` | string \| null | Category label |
+| `brand` | string \| null | Brand when applicable |
+| `ad_type` | string \| null | e.g. offer / demand |
+| `body` | string | Full description text (upstream `body`) |
+| `description` | string | Same as `body` |
+| `first_publication_date` | string \| null | |
+| `expiration_date` | string \| null | |
+| `index_date` | string \| null | |
+| `status` | string \| null | |
+| `has_phone` | boolean \| null | |
+| `favorites` | int \| null | Favorites count when present |
+| `location` | object | See below |
+| `attributes` | array | Dynamic facets (surface, DPE, etc.); see below |
+| `options` | object \| null | Listing options (urgent, gallery, …) when present |
+| `owner_user_id` | string \| null | Seller user id |
+| `user` | object \| null | Present only when seller was prefetched (`/search/with-users`) |
+
+### `location` (inside each ad)
+
+| Field | Type |
+|-------|------|
+| `country_id`, `region_id`, `region_name`, `department_id`, `department_name` | string \| null |
+| `city_label`, `city`, `zipcode` | string \| null |
+| `lat`, `lng` | number \| null |
+| `source`, `provider` | string \| null |
+| `is_shape` | boolean \| null |
+
+### `attributes[]` (inside each ad)
+
+| Field | Type |
+|-------|------|
+| `key`, `key_label`, `value`, `value_label` | string \| null |
+| `values` | string[] |
+| `values_label` | string[] \| null |
+| `value_label_reader` | string \| null |
+| `generic` | boolean \| null |
+
+Extra keys may appear on an attribute object if Leboncoin adds fields (`AdAttributeOut` allows unknown keys).
+
+### `user` (when present on an ad)
+
+| Field | Type |
+|-------|------|
+| `id` | string |
+| `name` | string |
+| `account_type` | string |
+| `location` | string \| null |
+
+### `GET /v1/users/{user_id}`
+
+Returns a **`User`** object with the same fields as `user` above (top-level JSON, not wrapped).
+
+### Example: `SearchResponse` (illustrative)
+
+```json
+{
+  "meta": {
+    "total": 8830,
+    "max_pages": 100
+  },
+  "ads": [
+    {
+      "id": 2179560719,
+      "subject": "Example listing title",
+      "url": "https://www.leboncoin.fr/ventes_immobilieres/2179560719.htm",
+      "images": ["https://img.leboncoin.fr/.../image.jpg?rule=ad-large"],
+      "media": {
+        "urls_thumb": ["https://img.leboncoin.fr/...?rule=ad-thumb"],
+        "urls_small": ["https://img.leboncoin.fr/...?rule=ad-small"],
+        "urls_large": ["https://img.leboncoin.fr/...?rule=ad-large"],
+        "urls": ["https://img.leboncoin.fr/...?rule=ad-image"],
+        "nb_images": 3,
+        "thumb_url": null,
+        "small_url": null,
+        "all_urls": ["https://img.leboncoin.fr/..."]
+      },
+      "price": 30500.0,
+      "price_cents": 3050000,
+      "price_calendar": null,
+      "category_id": "9",
+      "category_name": "Ventes immobilières",
+      "brand": "",
+      "ad_type": "offer",
+      "body": "Full description text from the listing.",
+      "description": "Full description text from the listing.",
+      "first_publication_date": "2023-04-20 21:48:31",
+      "expiration_date": "",
+      "index_date": "",
+      "status": "active",
+      "has_phone": false,
+      "favorites": null,
+      "location": {
+        "country_id": "FR",
+        "region_id": "12",
+        "region_name": "Ile-de-France",
+        "department_id": "75",
+        "department_name": "Paris",
+        "city_label": "Paris 75009",
+        "city": "Paris",
+        "zipcode": "75009",
+        "lat": 48.87115,
+        "lng": 2.33207,
+        "source": "city",
+        "provider": "here",
+        "is_shape": true
+      },
+      "attributes": [
+        {
+          "key": "real_estate_type",
+          "key_label": "Type de bien",
+          "value": "4",
+          "value_label": "Parking",
+          "values": ["4"],
+          "values_label": null,
+          "value_label_reader": null,
+          "generic": true
+        }
+      ],
+      "options": {
+        "has_option": false,
+        "booster": false,
+        "photosup": false,
+        "urgent": false,
+        "gallery": false,
+        "sub_toplist": false
+      },
+      "owner_user_id": "1988e0d2-9857-4270-80a3-16bee1703849",
+      "user": null
+    }
+  ]
+}
+```
+
+`user` is populated only on **`POST /v1/search/with-users`** when prefetch succeeds; otherwise it is `null`.
 
 ---
 

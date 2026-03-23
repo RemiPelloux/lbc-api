@@ -40,7 +40,7 @@ def create_app() -> FastAPI:
             "- `client_pool_size` (env `LBC_API_CLIENT_POOL_SIZE`) "
             "controls parallel upstream sessions.\n"
         ),
-        version="0.5.0",
+        version="0.6.0",
         lifespan=_lifespan,
         openapi_tags=OPENAPI_TAGS,
         swagger_ui_parameters=SWAGGER_UI_PARAMETERS,
