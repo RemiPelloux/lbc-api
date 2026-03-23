@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.1] - 2026-03-23
 
+### Added
+
+- **Docker**: `Dockerfile` (Python 3.12 slim Bookworm) and `compose.yaml` for `docker compose up --build`.
+
 ### Changed
 
 - **`Client.fork()`**: new sessions clone the parent’s headers, cookies, and TLS impersonation profile instead of performing another `www.leboncoin.fr` warmup GET—removes N+1 homepage requests when prefetching users or batch-fetching ads in parallel.

@@ -1,0 +1,11 @@
+services:
+  lbc-api:
+    build: .
+    ports:
+      - "${LBC_API_PORT:-8000}:8000"
+    environment:
+      LBC_API_HOST: "0.0.0.0"
+      LBC_API_PORT: "8000"
+      # Optional: HTTP(S) proxy if Leboncoin returns 403 / Datadome from the container IP
+      # LBC_API_PROXY_URL: "http://user:pass@host:3128"
+      # LBC_API_CLIENT_POOL_SIZE: "4"

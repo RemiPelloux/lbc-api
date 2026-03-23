@@ -51,7 +51,16 @@ lbc-api
 
 Interactive docs: `http://localhost:8000/docs` · machine-readable **request/response** schemas: `http://localhost:8000/openapi.json`
 
-Response JSON shapes are documented below; OpenAPI remains the source of truth for exact types and nullability.
+### Docker
+
+Yes — the API runs in a container like any FastAPI app. The image uses **Debian Bookworm (glibc)** so **`curl_cffi`** binary wheels install cleanly; **Alpine (musl)** is not recommended for this project.
+
+```bash
+docker compose up --build
+# → http://localhost:8000/docs
+```
+
+Pass the same `LBC_API_*` variables via `compose.yaml` or an env file. Outbound calls to Leboncoin use the **container’s public IP**; Datadome may block some datacenter ranges — use `LBC_API_PROXY_URL` (residential / clean French IP) if you see HTTP 403.
 
 ---
 
