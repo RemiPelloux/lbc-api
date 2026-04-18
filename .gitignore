@@ -6,3 +6,6 @@ __pycache__/
 .ruff_cache/
 .env
 *.egg-info/
+
+# Live API snapshot (python3 scripts/write_nice_job_offers_json.py)
+tests/nice_job_offers.json

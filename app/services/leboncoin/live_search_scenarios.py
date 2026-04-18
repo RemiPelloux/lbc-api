@@ -17,6 +17,14 @@ SAINT_LAURENT_DU_VAR = CityLocation(
     city="Saint-Laurent-du-Var",
 )
 
+# Nice (centre-ville) ; rayon 12 km — agglomeration courante pour l'emploi local
+NICE_JOB_SEARCH_AREA = CityLocation(
+    lat=43.7031,
+    lng=7.2661,
+    radius=12_000,
+    city="Nice",
+)
+
 
 def base_execute_search_kwargs() -> dict[str, Any]:
     return {
@@ -29,6 +37,18 @@ def base_execute_search_kwargs() -> dict[str, Any]:
         "ad_type": None,
         "owner_type": None,
         "shippable": None,
+    }
+
+
+def nice_job_offers_execute_kwargs() -> dict[str, Any]:
+    """Offres d'emploi sur Nice (sans mot-cle) — premiere page finder (``limit`` annonces)."""
+    return {
+        **base_execute_search_kwargs(),
+        "limit": 35,
+        "text": None,
+        "category": "EMPLOI_OFFRES_DEMPLOI",
+        "locations": [NICE_JOB_SEARCH_AREA],
+        "extra_filters": {},
     }
 
 
@@ -82,4 +102,5 @@ def live_scenario_execute_kwargs() -> list[tuple[str, dict[str, Any]]]:
                 "extra_filters": immo_extra,
             },
         ),
+        ("job_offers_nice", nice_job_offers_execute_kwargs()),
     ]

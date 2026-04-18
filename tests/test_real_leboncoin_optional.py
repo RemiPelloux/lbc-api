@@ -3,7 +3,7 @@ Live Leboncoin HTTP (real finder + real URLs).
 
 **Not** part of the default ``pytest`` run (see ``addopts`` in ``pyproject.toml``) so the
 offline suite stays fast and deterministic. Run this file **explicitly** when you want real
-checks (PS5, iPhone, Mazda MX-5, maison ~60 m² près de Saint-Laurent-du-Var, 5 km)::
+checks (PS5, iPhone, Mazda MX-5, maison St-Laurent-du-Var, offres d'emploi Nice)::
 
     pytest tests/test_real_leboncoin_optional.py -v
 
@@ -31,6 +31,7 @@ _SCENARIO_LABELS: dict[str, str] = {
     "maison_60m2_saint_laurent_du_var_5km": (
         "Maison ~60 m² ventes, Saint-Laurent-du-Var 5 km"
     ),
+    "job_offers_nice": "Offres d'emploi Nice (~12 km)",
 }
 
 

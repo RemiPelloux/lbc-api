@@ -9,3 +9,38 @@ services:
       # Optional: HTTP(S) proxy if Leboncoin returns 403 / Datadome from the container IP
       # LBC_API_PROXY_URL: "http://user:pass@host:3128"
       # LBC_API_CLIENT_POOL_SIZE: "4"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  lbc-test:
+    profiles:
+      - test
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      lbc-api:
+        condition: service_healthy
+
+  lbc-e2e:
+    profiles:
+      - e2e
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      LBC_API_E2E_BASE_URL: http://lbc-api:8000
+    depends_on:
+      lbc-api:
+        condition: service_healthy
+    command: ["pytest", "tests/test_api_e2e_http.py", "-v", "-s", "--tb=short"]

@@ -62,6 +62,22 @@ docker compose up --build
 
 Pass the same `LBC_API_*` variables via `compose.yaml` or an env file. Outbound calls to Leboncoin use the **container’s public IP**; Datadome may block some datacenter ranges — use `LBC_API_PROXY_URL` (residential / clean French IP) if you see HTTP 403.
 
+**API up → pytest in Docker → tear down** (host must have Docker; uses `Dockerfile.test` + profile `test`)::
+
+    ./scripts/docker_up_test_down.sh
+
+This starts `lbc-api`, waits for `/health`, runs the offline suite inside `lbc-test`, then runs `docker compose down`.
+
+**API up → HTTP e2e against the running container → tear down** (real `POST /v1/search` → Leboncoin via the API; profile `e2e`, service `lbc-e2e`)::
+
+    ./scripts/docker_api_e2e.sh
+
+Flow: start `lbc-api` → `lbc-e2e` runs `tests/test_api_e2e_http.py` with `LBC_API_E2E_BASE_URL=http://lbc-api:8000` (`pytest -s` prints **sample listings**: id, subject, url, price, city for the first ads of each search) → `docker compose down`. On **403** from upstream, tests fail with a short body excerpt (proxy often required from cloud/Docker IPs).
+
+### Compare lab (optional prototype)
+
+Small **live-search + HTML report** helpers for price “heat” vs average (Z900, MX-5, etc.) live under [`tests/apptest/`](tests/apptest/). See [`tests/apptest/README.md`](tests/apptest/README.md) for layout, run commands, and unit tests. Generated `output/*.html` is gitignored.
+
 ---
 
 ## JSON output schemas
@@ -327,6 +343,10 @@ pytest tests/test_real_leboncoin_optional.py -v
 To print **one real listing per scenario** as JSON (same searches as the test)::
 
     python3 scripts/print_live_search_examples.py
+
+To refresh **job offers in Nice** (first finder page) into ``tests/nice_job_offers.json`` (gitignored snapshot)::
+
+    python3 scripts/write_nice_job_offers_json.py
 
 If the run fails, the message explains anti-bot / proxy; the suite does not invent listing or image URLs.
 

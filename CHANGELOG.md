@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Docker**: `Dockerfile` (Python 3.12 slim Bookworm) and `compose.yaml` for `docker compose up --build`.
+- **Docker test cycle**: `Dockerfile.test`, `lbc-test` service (compose profile `test`), healthcheck on `lbc-api`, script `scripts/docker_up_test_down.sh`.
+- **Docker HTTP e2e**: `tests/test_api_e2e_http.py`, `lbc-e2e` (profile `e2e`), script `scripts/docker_api_e2e.sh` — pytest hits the live API in Docker (`httpx` → `/health`, OpenAPI, real searches).
 
 ### Changed
 
@@ -25,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test `test_fork_skips_second_homepage_warmup`.
 - Live integration test (PS5, iPhone, Mazda MX-5, maison ~60 m² near Saint-Laurent-du-Var) lives in `tests/test_real_leboncoin_optional.py`; default `pytest` ignores that file via `addopts` (run it explicitly for real HTTP).
 - `app/services/leboncoin/live_search_scenarios.py` + `scripts/print_live_search_examples.py` share the same four live queries and print one real listing per scenario as JSON.
+- Live scenario **job offers Nice** (`EMPLOI_OFFRES_DEMPLOI`, rayon ~12 km) + `scripts/write_nice_job_offers_json.py` → `tests/nice_job_offers.json`.
 
 ## [0.6.0] - 2026-03-23
 

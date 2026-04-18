@@ -81,7 +81,11 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = ["--ignore=tests/test_real_leboncoin_optional.py"]
+addopts = [
+  "--ignore=tests/test_real_leboncoin_optional.py",
+  "--ignore=tests/test_api_e2e_http.py",
+]
 markers = [
   "real_lbc: live HTTP to Leboncoin (run: pytest tests/test_real_leboncoin_optional.py -v)",
+  "e2e_http: HTTP tests against running API (scripts/docker_api_e2e.sh)",
 ]
